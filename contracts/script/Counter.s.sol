@@ -1,18 +1,29 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-import {Script, console} from "forge-std/Script.sol";
-import {Counter} from "../src/Counter.sol";
+import "forge-std/Script.sol";
+import "../src/WheelSwap.sol";
 
-contract CounterScript is Script {
-    Counter public counter;
+contract WheelSwapScript is Script {
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address usdcAddress = vm.envAddress("USDC_ADDRESS");
+        address cbBTCAddress = vm.envAddress("CBBTC_ADDRESS");
+        address wETHAddress = vm.envAddress("WETH_ADDRESS");
+        address degenAddress = vm.envAddress("DEGEN_ADDRESS");
+        address uniswapRouterAddress = vm.envAddress("UNISWAP_ROUTER_ADDRESS");
 
-    function setUp() public {}
+        vm.startBroadcast(deployerPrivateKey);
 
-    function run() public {
-        vm.startBroadcast();
+        WheelSwap wheelSwap = new WheelSwap(
+            usdcAddress,
+            cbBTCAddress,
+            wETHAddress,
+            degenAddress,
+            uniswapRouterAddress
+        );
 
-        counter = new Counter();
+        console.log("WheelSwap deployed at:", address(wheelSwap));
 
         vm.stopBroadcast();
     }
