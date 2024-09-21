@@ -1,47 +1,44 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Component from "./swapUI/swap";
+import '@rainbow-me/rainbowkit/styles.css';
 import {
-  DynamicContextProvider,
-  DynamicWidget,
-  useDynamicContext,
-} from "@dynamic-labs/sdk-react-core";
-import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
+  getDefaultConfig,
+  RainbowKitProvider,
+} from '@rainbow-me/rainbowkit';
+import { WagmiProvider } from 'wagmi';
+import {
+  mainnet,
+  polygon,
+  optimism,
+  arbitrum,
+  base,
+} from 'wagmi/chains';
+import {
+  QueryClientProvider,
+  QueryClient,
+} from "@tanstack/react-query";
+
+
+import Swap from "@/app/swapUI/swap";
+
+
+const config = getDefaultConfig({
+  appName: 'WheelSwap',
+  projectId: '001',
+  chains: [mainnet, polygon, optimism, arbitrum, base],
+  ssr: true, // If your dApp uses server side rendering (SSR)
+});
 
 export default function Home() {
+  const queryClient = new QueryClient();
   return (
-    <DynamicContextProvider
-      settings={{
-        environmentId: "bcc038de-e9ae-498e-b33d-eda614968f83",
-        walletConnectors: [EthereumWalletConnectors],
-      }}
-    >
-      <DynamicWidget />
-      <AuthenticatedComponent />
-    </DynamicContextProvider>
+   <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <Swap />
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
 
-function AuthenticatedComponent() {
-  const { primaryWallet } = useDynamicContext();
-  const [showComponent, setShowComponent] = useState(false);
-
-  useEffect(() => {
-    if (primaryWallet) {
-      setShowComponent(true);
-    } else {
-      setShowComponent(false);
-    }
-  }, [primaryWallet]);
-
-  return (
-    <>
-      {showComponent && (
-        <div>
-          <Component />
-        </div>
-      )}
-    </>
-  );
-}

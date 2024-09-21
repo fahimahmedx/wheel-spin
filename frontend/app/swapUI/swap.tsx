@@ -19,12 +19,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import Image from 'next/image';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const tokens = [
-  { symbol: "cbBTC", name: "Coinbase Wrapped BTC", color: "#FFD700", image: "../../assets/btc.png" },
+  { symbol: "cbBTC", name: "Coinbase Wrapped BTC", color: "#FFD700", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Bitcoin.svg/300px-Bitcoin.svg.png" },
   { symbol: "DEGEN", name: "DEGEN", color: "#8A2BE2", image: "/assets/degen.avif" },
   { symbol: "WETH", name: "Wrapped Ethereum", color: "#FFC0CB", image: "/assets/weth.webp" },
 ];
@@ -66,6 +67,7 @@ function RouletteWheel({
 
   return (
     <div className="relative w-64 h-64">
+      
       <div
         className="absolute inset-0 rounded-full overflow-hidden shadow-lg"
         style={{
@@ -89,12 +91,12 @@ function RouletteWheel({
               }}
             >
               <div className="relative w-12 h-12">
-                <Image
+                {/* <Image
                   src={token.image}
                   alt={token.symbol}
                   layout="fill"
                   objectFit="contain"
-                />
+                /> */}
               </div>
             </div>
           </div>
@@ -191,7 +193,6 @@ function ParticleBackground() {
 // }
 
 export default function Component() {
-  const { primaryWallet } = useDynamicContext();
   const [fromToken, setFromToken] = useState(tokens[0]);
   const [toToken, setToToken] = useState<{
     symbol: string;
@@ -217,7 +218,8 @@ export default function Component() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
       <div className="wallet-info absolute top-4 right-4 text-white">
-        Connected Wallet: {primaryWallet?.address}
+        {/* Connected Wallet: {primaryWal.address} */}
+        <ConnectButton />
       </div>
       <ParticleBackground />
       <div className="max-w-4xl mx-auto p-6 space-y-6 bg-black/30 backdrop-blur-sm rounded-xl shadow-2xl">
