@@ -21,16 +21,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import Image from 'next/image';
 
 const tokens = [
-  { symbol: "ETH", name: "Ethereum", color: "#627EEA" },
-  { symbol: "BTC", name: "Bitcoin", color: "#F7931A" },
-  { symbol: "USDT", name: "Tether", color: "#26A17B" },
-  { symbol: "LINK", name: "Chainlink", color: "#2A5ADA" },
-  { symbol: "ADA", name: "Cardano", color: "#0033AD" },
-  { symbol: "DOT", name: "Polkadot", color: "#E6007A" },
-  { symbol: "XRP", name: "Ripple", color: "#23292F" },
-  { symbol: "SOL", name: "Solana", color: "#00FFA3" },
+  { symbol: "cbBTC", name: "Coinbase Wrapped BTC", color: "#FFD700", image: "../../assets/btc.png" },
+  { symbol: "DEGEN", name: "DEGEN", color: "#8A2BE2", image: "/assets/degen.avif" },
+  { symbol: "WETH", name: "Wrapped Ethereum", color: "#FFC0CB", image: "/assets/weth.webp" },
 ];
 
 function RouletteWheel({
@@ -44,8 +40,8 @@ function RouletteWheel({
 
   useEffect(() => {
     if (spinning) {
-      const targetRotation = Math.floor(Math.random() * 360) + 720; // At least 2 full spins
-      const duration = 5000; // 5 seconds
+      const targetRotation = Math.floor(Math.random() * 360) + 1800; // At least 5 full spins
+      const duration = 6000; // 6 seconds
       const start = performance.now();
       const animate = (time: number) => {
         const elapsed = time - start;
@@ -86,18 +82,20 @@ function RouletteWheel({
             }}
           >
             <div
-              className="absolute top-0 bottom-0 left-1/2 right-0"
+              className="absolute top-0 bottom-0 left-1/2 right-0 flex items-center justify-center"
               style={{
                 backgroundColor: token.color,
                 boxShadow: "inset 0 0 10px rgba(0,0,0,0.3)",
               }}
             >
-              <span
-                className="absolute left-1/4 top-1/2 -translate-y-1/2 text-white font-bold text-lg"
-                style={{ transform: "rotate(90deg)" }}
-              >
-                {token.symbol}
-              </span>
+              <div className="relative w-12 h-12">
+                <Image
+                  src={token.image}
+                  alt={token.symbol}
+                  layout="fill"
+                  objectFit="contain"
+                />
+              </div>
             </div>
           </div>
         ))}
@@ -166,31 +164,31 @@ function ParticleBackground() {
   return <canvas id="particle-canvas" className="fixed inset-0 z-[-1]" />;
 }
 
-function Leaderboard() {
-  const leaderboardData = [
-    { name: "Solandyyyyyy", amount: "1,000,000" },
-    { name: "ANONYMOUSSSS", amount: "750,000" },
-    { name: "CryptoAggarwal", amount: "500,000" },
-    { name: "SolJakey", amount: "250,000" },
-    { name: "WEB3ISKING", amount: "100,000" },
-  ];
+// function Leaderboard() {
+//   const leaderboardData = [
+//     { name: "Solandyyyyyy", amount: "1,000,000" },
+//     { name: "ANONYMOUSSSS", amount: "750,000" },
+//     { name: "CryptoAggarwal", amount: "500,000" },
+//     { name: "SolJakey", amount: "250,000" },
+//     { name: "WEB3ISKING", amount: "100,000" },
+//   ];
 
-  return (
-    <div className="bg-black/50 p-4 rounded-lg">
-      <h3 className="text-xl font-bold mb-2 text-white flex items-center">
-        <Trophy className="mr-2" /> Leaderboard
-      </h3>
-      <ul className="space-y-2">
-        {leaderboardData.map((item, index) => (
-          <li key={index} className="flex justify-between text-white">
-            <span>{item.name}</span>
-            <span>${item.amount}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+//   return (
+//     <div className="bg-black/50 p-4 rounded-lg">
+//       <h3 className="text-xl font-bold mb-2 text-white flex items-center">
+//         <Trophy className="mr-2" /> Leaderboard
+//       </h3>
+//       <ul className="space-y-2">
+//         {leaderboardData.map((item, index) => (
+//           <li key={index} className="flex justify-between text-white">
+//             <span>{item.name}</span>
+//             <span>${item.amount}</span>
+//           </li>
+//         ))}
+//       </ul>
+//     </div>
+//   );
+// }
 
 export default function Component() {
   const { primaryWallet } = useDynamicContext();
@@ -301,7 +299,7 @@ export default function Component() {
               </Button>
             </motion.div>
           </div>
-          <Leaderboard />
+          {/* <Leaderboard /> */}
         </div>
       </div>
       <AnimatePresence>
