@@ -41,15 +41,19 @@ contract WheelSwap is Ownable {
 
         uint256 tokenType = uint256(block.timestamp) % 3; // 0: cbBTC, 1: wETH, 2: DEGEN
 
-        if (tokenType == 0) {
+        // hardcode minimum balances to swap
+        if (tokenType == 0 && usdcToken.balanceOf(address(this)) > 6400 * 10**1e6) { 
             swapAndTransfer(cbBTCToken, CBBTC_PRIZE, msg.sender);
             emit PrizeClaimed(msg.sender, 0, CBBTC_PRIZE);
-        } else if (tokenType == 1) {
+        } else if (tokenType == 1 && usdcToken.balanceOf(address(this)) > 2600 * 10**1e6) {
             swapAndTransfer(wETHToken, WETH_PRIZE, msg.sender);
             emit PrizeClaimed(msg.sender, 1, WETH_PRIZE);
-        } else {
+        } else if (tokenType == 2 && usdcToken.balanceOf(address(this)) > 0.0046 * 10**1e6) {
             swapAndTransfer(degenToken, DEGEN_PRIZE, msg.sender);
             emit PrizeClaimed(msg.sender, 2, DEGEN_PRIZE);
+        } else {
+            // No prize,
+            emit PrizeClaimed(msg.sender, 3, 0);
         }
     }
 
