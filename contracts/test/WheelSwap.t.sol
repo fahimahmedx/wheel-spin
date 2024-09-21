@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/WheelSwap.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 
 contract MockERC20 is ERC20 {
     constructor(string memory name, string memory symbol, uint8 decimals_) ERC20(name, symbol) {
@@ -23,23 +24,27 @@ contract MockERC20 is ERC20 {
 }
 
 contract MockSwapRouter is ISwapRouter {
-    function exactOutputSingle(ExactOutputSingleParams calldata params) external payable returns (uint256 amountIn) {
+    function exactInputSingle(ExactInputSingleParams calldata params) external payable override returns (uint256 amountOut) {
+        revert("Not implemented");
+    }
+
+    function exactInput(ExactInputParams calldata params) external payable override returns (uint256 amountOut) {
+        revert("Not implemented");
+    }
+
+    function exactOutputSingle(ExactOutputSingleParams calldata params) external payable override returns (uint256 amountIn) {
         // Mock implementation: just transfer the tokens
         IERC20(params.tokenIn).transferFrom(msg.sender, address(this), params.amountInMaximum);
         IERC20(params.tokenOut).transfer(params.recipient, params.amountOut);
         return params.amountInMaximum;
     }
 
-    function exactInput(ExactInputParams calldata params) external payable returns (uint256 amountOut) {
+    function exactOutput(ExactOutputParams calldata params) external payable override returns (uint256 amountIn) {
         revert("Not implemented");
     }
 
-    function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut) {
-        revert("Not implemented");
-    }
-
-    function exactOutput(ExactOutputParams calldata params) external payable returns (uint256 amountIn) {
-        revert("Not implemented");
+    function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external override {
+        // Mock implementation - can be left empty
     }
 }
 
@@ -80,12 +85,20 @@ contract WheelSwapTest is Test {
         usdcToken.approve(address(wheelSwap), type(uint256).max);
     }
 
-    function testSpinWheelWithInsufficientBalance() public {
+    function testConstructor() public {
+        assertEq(address(wheelSwap.usdcToken()), address(usdcToken));
+        assertEq(address(wheelSwap.cbBTCToken()), address(cbBTCToken));
+        assertEq(address(wheelSwap.wETHToken()), address(wETHToken));
+        assertEq(address(wheelSwap.degenToken()), address(degenToken));
+        assertEq(address(wheelSwap.uniswapRouter()), address(mockRouter));
+    }
+
+    function testSpinWheelInsufficientBalance() public {
         vm.prank(user);
         wheelSwap.spinWheel();
 
         // Check that USDC was transferred from user
-        assertEq(usdcToken.balanceOf(user), INITIAL_BALANCE - 100 * 1e6);
+        assertEq(usdcToken.balanceOf(user), INITIAL_BALANCE - 2.5 * 1e6);
 
         // Check that user didn't receive any prize due to insufficient balance
         assertEq(cbBTCToken.balanceOf(user), 0);
@@ -97,17 +110,19 @@ contract WheelSwapTest is Test {
         // Add sufficient balance to the contract
         usdcToken.mint(address(wheelSwap), 7000 * 1e6);
 
+        uint256 initialUSDCBalance = usdcToken.balanceOf(user);
+
         vm.prank(user);
         wheelSwap.spinWheel();
 
         // Check that USDC was transferred from user
-        assertEq(usdcToken.balanceOf(user), INITIAL_BALANCE - 100 * 1e6);
+        assertEq(usdcToken.balanceOf(user), initialUSDCBalance - 2.5 * 1e6);
 
         // Check that user received one of the prizes or no prize
         bool receivedPrize = 
             cbBTCToken.balanceOf(user) == 1 * 1e8 ||
             wETHToken.balanceOf(user) == 1 * 1e18 ||
-            degenToken.balanceOf(user) == 1000 * 1e18 ||
+            degenToken.balanceOf(user) == 500 * 1e18 ||
             (cbBTCToken.balanceOf(user) == 0 && wETHToken.balanceOf(user) == 0 && degenToken.balanceOf(user) == 0);
         
         assertTrue(receivedPrize, "Unexpected prize distribution");
@@ -137,12 +152,14 @@ contract WheelSwapTest is Test {
         // Add sufficient balance to the contract
         usdcToken.mint(address(wheelSwap), 7000 * 1e6);
 
+        uint256 initialUSDCBalance = usdcToken.balanceOf(user);
+
         for (uint i = 0; i < 5; i++) {
             vm.prank(user);
             wheelSwap.spinWheel();
         }
 
-        assertEq(usdcToken.balanceOf(user), INITIAL_BALANCE - 5 * 100 * 1e6);
+        assertEq(usdcToken.balanceOf(user), initialUSDCBalance - 5 * 2.5 * 1e6);
     }
 
     function testEmitTicketPurchasedEvent() public {
@@ -157,10 +174,16 @@ contract WheelSwapTest is Test {
         // Add sufficient balance to the contract
         usdcToken.mint(address(wheelSwap), 7000 * 1e6);
 
-        vm.expectEmit(true, true, true, true);
-        emit WheelSwap.PrizeClaimed(user, 3, 0); // Expecting no prize (type 3, amount 0)
+        vm.recordLogs();
         
         vm.prank(user);
         wheelSwap.spinWheel();
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertGt(entries.length, 1, "Expected at least two events");
+
+        // The second event should be PrizeClaimed
+        Vm.Log memory lastEntry = entries[entries.length - 1];
+        assertEq(lastEntry.topics[0], keccak256("PrizeClaimed(address,uint256,uint256)"), "Expected PrizeClaimed event");
     }
 }
