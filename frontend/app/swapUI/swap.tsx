@@ -1,25 +1,26 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { ChevronDown, Loader2, Trophy } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import confetti from "canvas-confetti"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect, useCallback } from "react";
+import { ChevronDown, Loader2, Trophy } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 
 const tokens = [
   { symbol: "ETH", name: "Ethereum", color: "#627EEA" },
@@ -30,43 +31,42 @@ const tokens = [
   { symbol: "DOT", name: "Polkadot", color: "#E6007A" },
   { symbol: "XRP", name: "Ripple", color: "#23292F" },
   { symbol: "SOL", name: "Solana", color: "#00FFA3" },
-]
+];
 
 function RouletteWheel({
   spinning,
   onSpinComplete,
 }: {
-  spinning: boolean
-  onSpinComplete: () => void
+  spinning: boolean;
+  onSpinComplete: () => void;
 }) {
-  const [rotation, setRotation] = useState(0)
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
     if (spinning) {
-    
-      const targetRotation = Math.floor(Math.random() * 360) + 720 // At least 2 full spins
-      const duration = 5000 // 5 seconds
-      const start = performance.now()
+      const targetRotation = Math.floor(Math.random() * 360) + 720; // At least 2 full spins
+      const duration = 5000; // 5 seconds
+      const start = performance.now();
       const animate = (time: number) => {
-        const elapsed = time - start
-        const progress = Math.min(elapsed / duration, 1)
-        const easeProgress = 1 - Math.pow(1 - progress, 4) // Ease out quartic
-        setRotation(targetRotation * easeProgress)
+        const elapsed = time - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 4); // Ease out quartic
+        setRotation(targetRotation * easeProgress);
         if (progress < 1) {
-          requestAnimationFrame(animate)
+          requestAnimationFrame(animate);
         } else {
-          onSpinComplete()
-       
+          onSpinComplete();
+
           confetti({
             particleCount: 100,
             spread: 70,
-            origin: { y: 0.6 }
-          })
+            origin: { y: 0.6 },
+          });
         }
-      }
-      requestAnimationFrame(animate)
+      };
+      requestAnimationFrame(animate);
     }
-  }, [spinning, onSpinComplete])
+  }, [spinning, onSpinComplete]);
 
   return (
     <div className="relative w-64 h-64">
@@ -104,19 +104,28 @@ function RouletteWheel({
       </div>
       <div className="absolute top-0 left-1/2 w-0 h-0 -mt-2 -ml-2 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-black" />
     </div>
-  )
+  );
 }
 
 function ParticleBackground() {
   useEffect(() => {
-    const canvas = document.getElementById("particle-canvas") as HTMLCanvasElement
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
+    const canvas = document.getElementById(
+      "particle-canvas"
+    ) as HTMLCanvasElement;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    const particles: { x: number; y: number; radius: number; color: string; vx: number; vy: number }[] = []
+    const particles: {
+      x: number;
+      y: number;
+      radius: number;
+      color: string;
+      vx: number;
+      vy: number;
+    }[] = [];
 
     for (let i = 0; i < 100; i++) {
       particles.push({
@@ -125,36 +134,36 @@ function ParticleBackground() {
         radius: Math.random() * 2 + 1,
         color: `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.5})`,
         vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5
-      })
+        vy: (Math.random() - 0.5) * 0.5,
+      });
     }
 
     function animate() {
-      requestAnimationFrame(animate)
-      ctx?.clearRect(0, 0, canvas.width, canvas.height)
+      requestAnimationFrame(animate);
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
 
-      particles.forEach(particle => {
-        particle.x += particle.vx
-        particle.y += particle.vy
+      particles.forEach((particle) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
 
-        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1
-        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1
+        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
 
-        ctx?.beginPath()
-        ctx?.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
-        ctx!.fillStyle = particle.color
-        ctx?.fill()
-      })
+        ctx?.beginPath();
+        ctx?.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx!.fillStyle = particle.color;
+        ctx?.fill();
+      });
     }
 
-    animate()
+    animate();
 
     return () => {
-      cancelAnimationFrame(animate as unknown as number)
-    }
-  }, [])
+      cancelAnimationFrame(animate as unknown as number);
+    };
+  }, []);
 
-  return <canvas id="particle-canvas" className="fixed inset-0 z-[-1]" />
+  return <canvas id="particle-canvas" className="fixed inset-0 z-[-1]" />;
 }
 
 function Leaderboard() {
@@ -164,7 +173,7 @@ function Leaderboard() {
     { name: "CryptoAggarwal", amount: "500,000" },
     { name: "SolJakey", amount: "250,000" },
     { name: "WEB3ISKING", amount: "100,000" },
-  ]
+  ];
 
   return (
     <div className="bg-black/50 p-4 rounded-lg">
@@ -180,51 +189,62 @@ function Leaderboard() {
         ))}
       </ul>
     </div>
-  )
+  );
 }
 
 export default function Component() {
-  const [fromToken, setFromToken] = useState(tokens[0])
+  const { primaryWallet } = useDynamicContext();
+  const [fromToken, setFromToken] = useState(tokens[0]);
   const [toToken, setToToken] = useState<{
-    symbol: string
-    name: string
-    color: string
-  } | null>(null)
-  const [amount, setAmount] = useState("")
-  const [spinning, setSpinning] = useState(false)
-  const [showResult, setShowResult] = useState(false)
+    symbol: string;
+    name: string;
+    color: string;
+  } | null>(null);
+  const [amount, setAmount] = useState("");
+  const [spinning, setSpinning] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
   const handleSpin = useCallback(() => {
-    setSpinning(true)
-    setToToken(null)
-  }, [])
+    setSpinning(true);
+    setToToken(null);
+  }, []);
 
   const handleSpinComplete = useCallback(() => {
-    const randomToken = tokens[Math.floor(Math.random() * tokens.length)]
-    setToToken(randomToken)
-    setSpinning(false)
-    setShowResult(true)
-  }, [])
+    const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
+    setToToken(randomToken);
+    setSpinning(false);
+    setShowResult(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="wallet-info absolute top-4 right-4 text-white">
+        Connected Wallet: {primaryWallet?.address}
+      </div>
       <ParticleBackground />
       <div className="max-w-4xl mx-auto p-6 space-y-6 bg-black/30 backdrop-blur-sm rounded-xl shadow-2xl">
-        <h1 className="text-4xl font-bold text-center text-white mb-8">Web3 Casino Roulette</h1>
+        <h1 className="text-4xl font-bold text-center text-white mb-8">
+          Web3 Casino Roulette
+        </h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="from-token" className="text-white">From</Label>
+              <Label htmlFor="from-token" className="text-white">
+                From
+              </Label>
               <Select
                 value={fromToken.symbol}
                 onValueChange={(value) => {
-                  const selectedToken = tokens.find((t) => t.symbol === value)
+                  const selectedToken = tokens.find((t) => t.symbol === value);
                   if (selectedToken) {
-                    setFromToken(selectedToken)
+                    setFromToken(selectedToken);
                   }
                 }}
               >
-                <SelectTrigger id="from-token" className="bg-white/10 border-white/20 text-white">
+                <SelectTrigger
+                  id="from-token"
+                  className="bg-white/10 border-white/20 text-white"
+                >
                   <SelectValue placeholder="Select token" />
                 </SelectTrigger>
                 <SelectContent>
@@ -243,7 +263,9 @@ export default function Component() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="amount" className="text-white">Amount</Label>
+              <Label htmlFor="amount" className="text-white">
+                Amount
+              </Label>
               <Input
                 id="amount"
                 type="number"
@@ -262,10 +284,7 @@ export default function Component() {
                 onSpinComplete={handleSpinComplete}
               />
             </div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold text-lg py-6"
                 onClick={handleSpin}
@@ -290,18 +309,29 @@ export default function Component() {
           <Dialog open={showResult} onOpenChange={setShowResult}>
             <DialogContent className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold">Swap Result</DialogTitle>
+                <DialogTitle className="text-2xl font-bold">
+                  Swap Result
+                </DialogTitle>
               </DialogHeader>
               <div className="text-center py-4">
                 <p className="text-xl mb-2">
-                  You swapped <span className="font-bold">{amount} {fromToken.symbol}</span>
+                  You swapped{" "}
+                  <span className="font-bold">
+                    {amount} {fromToken.symbol}
+                  </span>
                 </p>
                 <p className="text-3xl font-bold mb-4">for</p>
-                <p className="text-4xl font-bold" style={{ color: toToken?.color }}>
+                <p
+                  className="text-4xl font-bold"
+                  style={{ color: toToken?.color }}
+                >
                   {amount} {toToken?.symbol}
                 </p>
               </div>
-              <Button onClick={() => setShowResult(false)} className="mt-4 bg-white text-purple-600 hover:bg-gray-100">
+              <Button
+                onClick={() => setShowResult(false)}
+                className="mt-4 bg-white text-purple-600 hover:bg-gray-100"
+              >
                 Close
               </Button>
             </DialogContent>
@@ -309,5 +339,5 @@ export default function Component() {
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
